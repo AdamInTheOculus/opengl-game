@@ -17,6 +17,33 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
 
+/**
+ * Because OpenGL works in 3D space, we render a 2D triangle with each vertex having a z coordinate of 0.0.
+ **/
+const float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.5f, 0.0f
+};
+
+const char* vertexShaderSource = "\n"
+    "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = vec4(aPos.x, aPos.y, aPos.y, 1.0);\n"
+    "}\n"
+;
+
+const char* fragmentShaderSource = "\n"
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\n"
+;
+
 int main() {
     glfwSetErrorCallback(error_callback);
 
@@ -26,13 +53,7 @@ int main() {
     **/ 
     GLFWwindow* window;
 
-    if(!glfwInit()) {
-        return -1;
-    }
-
-    /**
-     * Setting OpenGL version to 3.3
-    **/
+    if(!glfwInit()) { return -1; }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -59,19 +80,112 @@ int main() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    while(!glfwWindowShouldClose(window)) {
+    // =====================================
+    // == Graphics Setup / Initialization ==
+    // =====================================
 
-        // Process input ...
-        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS ||
-           glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+    // =================
+    // == Shader code ==
+    // =================
+    // Create and compile vertex shader.
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // Check if vertex compilation was successful.
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        DEBUG_ERROR("Vertex shader failed to compile.\n%s\n", infoLog);
+        return -1;
+    }
+
+    // Create and compile fragment shader.
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // Check if fragment compilation was successful.
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        DEBUG_ERROR("Fragment shader failed to compile.\n%s\n", infoLog);
+        return -1;
+    }
+
+    // Create shader program.
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // Check if linking shader program was successful.
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        DEBUG_ERROR("Shader program failed to link.\n%s\n", infoLog);
+        return -1;
+    }
+
+    // Clean up.
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    // ===================
+    // == Creating VAOs ==
+    // ===================
+    unsigned int VAO, VBO;
+
+    // Create buffer on GPU and store vertex array data in it.
+    // Static draw since it's not change at all.
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Link vertex attributes.
+    glVertexAttribPointer(
+        0,                 // Location ID of vertex attribute to configure (defined in vertex shader).
+        3,                 // Size of vertex attribute. Vertex attribute is vec3 so 3 values.
+        GL_FLOAT,          // Type of vertex attribute.
+        GL_FALSE,          // Normalize data? No, not relevant right now.
+        3 * sizeof(float), // Stride - space between consecutive vertex attributes.
+        (void*)0           // Offset position where data begins in buffer.
+    );
+    glEnableVertexAttribArray(0);
+
+    // Clean up bound buffer / vertex array.
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    while (!glfwWindowShouldClose(window)) {
+
+        // ===================
+        // == Process input ==
+        // ===================
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
 
-        // Rendering commands ...
+        // ========================
+        // == Rendering commands ==
+        // ========================
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Check/call events and swap buffers
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // ========================================
+        // == Check/call events and swap buffers ==
+        // ========================================
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
