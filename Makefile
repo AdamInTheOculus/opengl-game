@@ -1,7 +1,9 @@
 all:
-	rm game; clear
-	g++ -Wall main.cpp -o game -lglfw -framework OpenGL
-
+	rm bin/*; clear
+	g++ -Wall src/* -o bin/game -Iinclude -lglfw -framework OpenGL
 
 clean:
-	rm game
+	rm bin/game
+
+run:
+	./bin/game
