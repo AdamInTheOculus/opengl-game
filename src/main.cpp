@@ -76,6 +76,7 @@ int main() {
         glfwSwapBuffers(window);
     }
 
+    glfwTerminate();
     DEBUG_LOG("Closing application. Clean up complete.\n");
     return 0;
 }
