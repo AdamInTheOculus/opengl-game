@@ -135,10 +135,12 @@ int main() {
             glfwSetWindowShouldClose(window, true);
         }
 
-        if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        } else if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
         }
 
         // ========================
