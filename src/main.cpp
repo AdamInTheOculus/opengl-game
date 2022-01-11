@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <math.h>
 #include "debug.h"
 
 #define DEBUG 1
@@ -13,7 +14,8 @@
 void processInput(GLFWwindow* window);
 void error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-unsigned int create_shader_program();
+unsigned int create_shader_program(const char* vertexShaderSource, const char* fragmentShaderSource);
+void handle_input(GLFWwindow* window);
 
 const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
@@ -30,23 +32,19 @@ const int indices[] = {
     1, 2, 3    // second triangle
 };
 
-const char* vertexShaderSource = "\n"
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "    gl_Position = vec4(aPos.x, aPos.y, aPos.y, 1.0);\n"
-    "}\n"
-;
+// const float vertices1[] = {
+//     // triangle 1
+//     0.5f,  0.5f, 0.0f,   // top right
+//     0.5f, -0.5f, 0.0f,   // bottom right
+//     -0.5f, -0.5f, 0.0f  // bottom left
+// };
 
-const char* fragmentShaderSource = "\n"
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n"
-;
+// const float vertices2[] = {
+//     // triangle 2
+//     0.5f,  0.5f, 0.0f,   // top right
+//     -0.5f, -0.5f, 0.0f,  // bottom left
+//     -0.5f, 0.5f, 0.0f,   // top left
+// };
 
 int main() {
     glfwSetErrorCallback(error_callback);
@@ -84,15 +82,39 @@ int main() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    int nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    DEBUG_LOG("Maximum number of vertex attributes is %d.\n", nrAttributes);
+
     // =====================================
     // == Graphics Setup / Initialization ==
     // =====================================
-    unsigned int shaderProgram = create_shader_program();
+    const char* vertexShaderSource = "\n"
+        "#version 410 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(aPos.x, aPos.y, aPos.y, 1.0);\n"
+        "}\n"
+    ;
+
+    const char* fragmentShaderSource = "\n"
+        "#version 410 core\n"
+        "out vec4 FragColor;\n"
+        "uniform vec4 customColor; // we set this variable in the OpenGL code.\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = customColor;\n"
+        "}\n"
+    ;
+
+    unsigned int shaderProgram = create_shader_program(vertexShaderSource, fragmentShaderSource);
 
     // ===================
     // == Creating VAOs ==
     // ===================
     unsigned int VAO, VBO, EBO;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -120,28 +142,19 @@ int main() {
         3 * sizeof(float), // Stride - space between consecutive vertex attributes.
         (void*)0           // Offset position where data begins in buffer.
     );
-    glEnableVertexAttribArray(0);
 
     // Clean up bound buffer / vertex array.
+    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
 
     while (!glfwWindowShouldClose(window)) {
 
         // ===================
         // == Process input ==
         // ===================
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, true);
-        }
-
-        if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-        }
+        handle_input(window);
 
         // ========================
         // == Rendering commands ==
@@ -151,6 +164,13 @@ int main() {
 
         // draw our first triangle
         glUseProgram(shaderProgram);
+
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        // finally, render the triangle
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -163,6 +183,7 @@ int main() {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
     glfwTerminate();
     DEBUG_LOG("Closing application. Clean up complete.\n");
@@ -178,7 +199,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-unsigned int create_shader_program() {
+unsigned int create_shader_program(const char* vertexShaderSource, const char* fragmentShaderSource) {
     // Create and compile vertex shader.
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -229,4 +250,18 @@ unsigned int create_shader_program() {
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
+}
+
+void handle_input(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+    }
 }
