@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <math.h>
+
 #include "debug.h"
+#include "shader.h"
 
 #define DEBUG 1
 
@@ -74,47 +76,19 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         DEBUG_ERROR("Failed to initialize GLAD.\n");
         return -1;
     }
 
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     int nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     DEBUG_LOG("Maximum number of vertex attributes is %d.\n", nrAttributes);
 
-    // =====================================
-    // == Graphics Setup / Initialization ==
-    // =====================================
-    const char* vertexShaderSource = "\n"
-        "#version 410 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
-        "layout (location = 1) in vec3 aColor;\n"
-        ""
-        "out vec3 customColor;\n"
-        ""
-        "void main()\n"
-        "{\n"
-        "    gl_Position = vec4(aPos, 1.0);\n"
-        "    customColor = aColor;\n"
-        "}\n"
-    ;
-
-    const char* fragmentShaderSource = "\n"
-        "#version 410 core\n"
-        "out vec4 FragColor;\n"
-        "in vec3 customColor;\n"
-        "void main()\n"
-        "{\n"
-        "   FragColor = vec4(customColor, 1.0f);\n"
-        "}\n"
-    ;
-
-    unsigned int shaderProgram = create_shader_program(vertexShaderSource, fragmentShaderSource);
+    // unsigned int shaderProgram = create_shader_program(vertexShaderSource, fragmentShaderSource);
+    Shader shaderInstance("shaders/vertex.vs", "shaders/fragment.fs");
 
     // ===================
     // == Creating VAOs ==
@@ -172,12 +146,11 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
-        // Setup color for uniform
         float timeValue = glfwGetTime();
         float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+        shaderInstance.use();
+        shaderInstance.setFloat("customColor", greenValue);
 
         // finally, render the triangle
         glBindVertexArray(VAO);
@@ -193,7 +166,6 @@ int main() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
     glfwTerminate();
     DEBUG_LOG("Closing application. Clean up complete.\n");
     return 0;
@@ -206,59 +178,6 @@ void error_callback(int error, const char* description) {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     DEBUG_LOG("Resizing frame buffer to %dW x %dH.\n", width, height);
     glViewport(0, 0, width, height);
-}
-
-unsigned int create_shader_program(const char* vertexShaderSource, const char* fragmentShaderSource) {
-    // Create and compile vertex shader.
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Check if vertex compilation was successful.
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        DEBUG_ERROR("Vertex shader failed to compile.\n%s\n", infoLog);
-        return -1;
-    }
-
-    // Create and compile fragment shader.
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Check if fragment compilation was successful.
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        DEBUG_ERROR("Fragment shader failed to compile.\n%s\n", infoLog);
-        return -1;
-    }
-
-    // Create shader program.
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // Check if linking shader program was successful.
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        DEBUG_ERROR("Shader program failed to link.\n%s\n", infoLog);
-        return -1;
-    }
-
-    // Clean up.
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return shaderProgram;
 }
 
 void handle_input(GLFWwindow* window) {
