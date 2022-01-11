@@ -63,7 +63,7 @@ public:
         unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
-        checkCompileErrors(vertex, "FRAGMENT");
+        checkCompileErrors(fragment, "FRAGMENT");
 
         // Link shader program
         ID = glCreateProgram();
@@ -113,12 +113,12 @@ private:
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
                 DEBUG_ERROR("Shader program failed to link.\n%s\n", infoLog);
-            } else {
-                glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-                if (!success) {
-                    glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                    DEBUG_ERROR("[%s] shader failed to compile.\n%s\n", type, infoLog);
-                }
+            }
+        } else {
+            glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+            if (!success) {
+                glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+                DEBUG_ERROR("[%s] shader failed to compile.\n%s\n", type, infoLog);
             }
         }
     }

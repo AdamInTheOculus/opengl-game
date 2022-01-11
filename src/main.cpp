@@ -146,11 +146,11 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-
         shaderInstance.use();
-        shaderInstance.setFloat("customColor", greenValue);
+        // shaderInstance.setFloat("offset", 0.25f);
+        // float timeValue = glfwGetTime();
+        // float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        // shaderInstance.setFloat("customColor", greenValue);
 
         // finally, render the triangle
         glBindVertexArray(VAO);
