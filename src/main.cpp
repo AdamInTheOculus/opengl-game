@@ -21,10 +21,11 @@ const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
 
 const float vertices[] = {
-    0.5f,  0.5f, 0.0f,   // top right
-    0.5f, -0.5f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+    // positions         // colours  
+    0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f, // top right
+    0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f, // bottom right
+   -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f, // bottom left
+   -0.5f,  0.5f, 0.0f,   0.0f, 0.0f, 0.0f  // top left 
 };
 
 const int indices[] = {
@@ -92,19 +93,24 @@ int main() {
     const char* vertexShaderSource = "\n"
         "#version 410 core\n"
         "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec3 aColor;\n"
+        ""
+        "out vec3 customColor;\n"
+        ""
         "void main()\n"
         "{\n"
-        "    gl_Position = vec4(aPos.x, aPos.y, aPos.y, 1.0);\n"
+        "    gl_Position = vec4(aPos, 1.0);\n"
+        "    customColor = aColor;\n"
         "}\n"
     ;
 
     const char* fragmentShaderSource = "\n"
         "#version 410 core\n"
         "out vec4 FragColor;\n"
-        "uniform vec4 customColor; // we set this variable in the OpenGL code.\n"
+        "in vec3 customColor;\n"
         "void main()\n"
         "{\n"
-        "   FragColor = customColor;\n"
+        "   FragColor = vec4(customColor, 1.0f);\n"
         "}\n"
     ;
 
@@ -133,18 +139,22 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Link vertex attributes.
+    // Specify position attribute.
     glVertexAttribPointer(
         0,                 // Location ID of vertex attribute to configure (defined in vertex shader).
         3,                 // Size of vertex attribute. Vertex attribute is vec3 so 3 values.
         GL_FLOAT,          // Type of vertex attribute.
         GL_FALSE,          // Normalize data? No, not relevant right now.
-        3 * sizeof(float), // Stride - space between consecutive vertex attributes.
+        6 * sizeof(float), // Stride - space between consecutive vertex attributes.
         (void*)0           // Offset position where data begins in buffer.
     );
+    glEnableVertexAttribArray(0);
+
+    // Specify color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Clean up bound buffer / vertex array.
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -162,9 +172,8 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // draw our first triangle
         glUseProgram(shaderProgram);
-
+        // Setup color for uniform
         float timeValue = glfwGetTime();
         float greenValue = sin(timeValue) / 2.0f + 0.5f;
         int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
