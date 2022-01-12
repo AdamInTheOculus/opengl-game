@@ -1,6 +1,6 @@
 all:
 	rm bin/*; clear
-	g++ -Wall src/* -o bin/game -Iinclude -lglfw -framework OpenGL
+	g++ -Wall src/* -o bin/game -Iinclude/ -Iinclude/stb_image -lglfw -framework OpenGL
 
 clean:
 	rm bin/game
