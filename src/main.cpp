@@ -133,12 +133,27 @@ int main() {
     shaderInstance.setInt("customTexture", textureInstance.instanceCount);
     shaderInstance.setInt("customTexture2", textureInstance2.instanceCount);
 
+    float mixVariable = 0.2f;
+
     while (!glfwWindowShouldClose(window)) {
 
         // ===================
         // == Process input ==
         // ===================
         handle_input(window);
+
+        // Handle input change for mix uniform variable in fragment shader.
+        if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            mixVariable += 0.01f;
+            if(mixVariable > 1.0f) {
+                mixVariable = 1.0f;
+            }
+        } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            mixVariable -= 0.01f;
+            if(mixVariable < 0.0f) {
+                mixVariable = 0.0f;
+            }
+        } 
 
         // ========================
         // == Rendering commands ==
@@ -150,6 +165,7 @@ int main() {
         textureInstance2.use();
 
         shaderInstance.use();
+        shaderInstance.setFloat("mixVariable", mixVariable);
 
         // finally, render the triangle
         glBindVertexArray(VAO);
