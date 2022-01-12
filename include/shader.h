@@ -57,20 +57,20 @@ public:
         unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
+        checkCompileErrors(vertex, "Vertex");
 
         // Compile fragment shader
         unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
+        checkCompileErrors(fragment, "Fragment");
 
         // Link shader program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
-        checkCompileErrors(ID, "PROGRAM");
+        checkCompileErrors(ID, "Program");
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);
@@ -108,7 +108,7 @@ private:
     {
         int success;
         char infoLog[1024];
-        if (strcmp(type, "PROGRAM") == 0) {
+        if (strcmp(type, "Program") == 0) {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
@@ -118,7 +118,7 @@ private:
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
             if (!success) {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                DEBUG_ERROR("[%s] shader failed to compile.\n%s\n", type, infoLog);
+                DEBUG_ERROR("%s shader failed to compile.\n%s\n", type, infoLog);
             }
         }
     }

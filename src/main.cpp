@@ -68,21 +68,15 @@ int main() {
         return -1;
     }
 
+
     int nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     DEBUG_LOG("Maximum number of vertex attributes is %d.\n", nrAttributes);
-
-    // ==========================
-    // == Setup shader program ==
-    // ==========================
-    Shader shaderInstance("shaders/vertex.vs", "shaders/fragment.fs");
-    Texture textureInstance("assets/container.jpg");
 
     // ==========================================
     // == Setup OpenGL buffers - VAO, VBO, EBO ==
     // ==========================================
     unsigned int VAO, VBO, EBO;
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -124,6 +118,21 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    // ====================
+    // == Setup textures ==
+    // ====================
+    stbi_set_flip_vertically_on_load(true);
+    Texture textureInstance(0, "assets/container.jpg", GL_RGB);
+    Texture textureInstance2(1, "assets/awesomeface.png", GL_RGBA);
+
+    // ==========================
+    // == Setup shader program ==
+    // ==========================
+    Shader shaderInstance("shaders/vertex.vs", "shaders/fragment.fs");
+    shaderInstance.use();
+    shaderInstance.setInt("customTexture", textureInstance.instanceCount);
+    shaderInstance.setInt("customTexture2", textureInstance2.instanceCount);
+
     while (!glfwWindowShouldClose(window)) {
 
         // ===================
@@ -137,7 +146,9 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glBindTexture(GL_TEXTURE_2D, textureInstance.ID);
+        textureInstance.use();
+        textureInstance2.use();
+
         shaderInstance.use();
 
         // finally, render the triangle
