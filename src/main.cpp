@@ -12,10 +12,9 @@
 #include "shader.h"
 #include "texture.h"
 
-void processInput(GLFWwindow* window);
+void prepare_triangle(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
 void error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-unsigned int create_shader_program(const char* vertexShaderSource, const char* fragmentShaderSource);
 void handle_input(GLFWwindow* window);
 
 const int WINDOW_HEIGHT = 720;
@@ -34,6 +33,8 @@ const int indices[] = {
     1, 2, 3    // second triangle
 };
 
+float mixVariable = 0.2f;
+
 int main() {
     glfwSetErrorCallback(error_callback);
 
@@ -49,8 +50,8 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     #ifdef __APPLE__
-        DEBUG_LOG("Setting OSX GLFW settings.\n");
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        DEBUG_LOG("OSX GLFW settings enabled.\n");
     #endif
 
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Untitled 2D Game", NULL, NULL);
@@ -73,26 +74,118 @@ int main() {
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     DEBUG_LOG("Maximum number of vertex attributes is %d.\n", nrAttributes);
 
+    unsigned int VAO, VBO, EBO;
+    prepare_triangle(&VAO, &VBO, &EBO);
+
+    // ====================
+    // == Setup textures ==
+    // ====================
+    stbi_set_flip_vertically_on_load(true);
+    Texture texture(0, "assets/container.jpg", GL_RGB);
+    Texture texture2(1, "assets/awesomeface.png", GL_RGBA);
+
+    // ==========================
+    // == Setup shader program ==
+    // ==========================
+    Shader shader("shaders/vertex.vs", "shaders/fragment.fs");
+    shader.use();
+    shader.setInt("customTexture", texture.instanceCount);
+    shader.setInt("customTexture2", texture2.instanceCount);
+
+    while (!glfwWindowShouldClose(window)) {
+
+        // ===================
+        // == Process input ==
+        // ===================
+        handle_input(window);
+
+        // ========================
+        // == Rendering commands ==
+        // ========================
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        texture.use();
+        texture2.use();
+
+        shader.use();
+        shader.setFloat("mixVariable", mixVariable);
+
+        // finally, render the triangle
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // ====================================
+        // == Swap buffer and poll IO events ==
+        // ====================================
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glfwTerminate();
+    DEBUG_LOG("Closing application. Clean up complete.\n");
+    return 0;
+}
+
+void error_callback(int error, const char* description) {
+    DEBUG_ERROR("%s\n", description);
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    DEBUG_LOG("Resizing frame buffer to %dW x %dH.\n", width, height);
+    glViewport(0, 0, width, height);
+}
+
+void handle_input(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+    }
+
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        mixVariable += 0.01f;
+        if(mixVariable > 1.0f) {
+            mixVariable = 1.0f;
+        }
+    } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        mixVariable -= 0.01f;
+        if(mixVariable < 0.0f) {
+            mixVariable = 0.0f;
+        }
+    }
+}
+
+void prepare_triangle(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO)
+{
     // ==========================================
     // == Setup OpenGL buffers - VAO, VBO, EBO ==
     // ==========================================
-    unsigned int VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenVertexArrays(1, VAO);
+    glGenBuffers(1, VBO);
+    glGenBuffers(1, EBO);
 
     // Create buffer on GPU and store vertex array data in it.
     // Static draw since it's not change at all.
-    
+
     // VAO setup
-    glBindVertexArray(VAO);
+    glBindVertexArray(*VAO);
 
     // VBO setup
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // EBO setup
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Specify position attribute
@@ -117,94 +210,4 @@ int main() {
     // Clean up bound buffer / vertex array.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    // ====================
-    // == Setup textures ==
-    // ====================
-    stbi_set_flip_vertically_on_load(true);
-    Texture textureInstance(0, "assets/container.jpg", GL_RGB);
-    Texture textureInstance2(1, "assets/awesomeface.png", GL_RGBA);
-
-    // ==========================
-    // == Setup shader program ==
-    // ==========================
-    Shader shaderInstance("shaders/vertex.vs", "shaders/fragment.fs");
-    shaderInstance.use();
-    shaderInstance.setInt("customTexture", textureInstance.instanceCount);
-    shaderInstance.setInt("customTexture2", textureInstance2.instanceCount);
-
-    float mixVariable = 0.2f;
-
-    while (!glfwWindowShouldClose(window)) {
-
-        // ===================
-        // == Process input ==
-        // ===================
-        handle_input(window);
-
-        // Handle input change for mix uniform variable in fragment shader.
-        if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            mixVariable += 0.01f;
-            if(mixVariable > 1.0f) {
-                mixVariable = 1.0f;
-            }
-        } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            mixVariable -= 0.01f;
-            if(mixVariable < 0.0f) {
-                mixVariable = 0.0f;
-            }
-        } 
-
-        // ========================
-        // == Rendering commands ==
-        // ========================
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        textureInstance.use();
-        textureInstance2.use();
-
-        shaderInstance.use();
-        shaderInstance.setFloat("mixVariable", mixVariable);
-
-        // finally, render the triangle
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        // ====================================
-        // == Swap buffer and poll IO events ==
-        // ====================================
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glfwTerminate();
-    DEBUG_LOG("Closing application. Clean up complete.\n");
-    return 0;
-}
-
-void error_callback(int error, const char* description) {
-    fprintf(stderr, "Error: %s\n", description);
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    DEBUG_LOG("Resizing frame buffer to %dW x %dH.\n", width, height);
-    glViewport(0, 0, width, height);
-}
-
-void handle_input(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-
-    if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-    }
 }
