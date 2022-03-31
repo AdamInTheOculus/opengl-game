@@ -5,9 +5,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-#include <math.h>
-
 #include "debug.h"
 #include "shader.h"
 #include "texture.h"
@@ -16,8 +13,6 @@
 
 void prepare_triangle(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
 void error_callback(int error, const char* description);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void handle_input(Input input);
 
 const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
@@ -38,6 +33,8 @@ const int indices[] = {
 float mixVariable = 0.2f;
 
 int main() {
+    glfwSetErrorCallback(error_callback);
+
     Window window(WINDOW_WIDTH, WINDOW_HEIGHT, "2D Platformer");
     Input input(window.getGLFWwindow());
 
@@ -152,6 +149,6 @@ void prepare_triangle(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO)
     glBindVertexArray(0);
 }
 
-void errorCallback(int error, const char* description) {
+void error_callback(int error, const char* description) {
     DEBUG_ERROR("%s\n", description);
 }
