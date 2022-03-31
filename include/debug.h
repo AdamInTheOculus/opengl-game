@@ -1,6 +1,8 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <stdio.h>
+
 #ifndef DEBUG
     #define DEBUG 0
 #endif
@@ -11,19 +13,25 @@
 
 #define DEBUG_LOG(format, ...) \
     if (DEBUG) { \
-        fprintf(stdout, "%s | Line %d | %s | ", __FILE__, __LINE__, __FUNCTION__); \
+        fprintf(stdout, "LOG | %s | Line %d | %s | ", __FILE__, __LINE__, __FUNCTION__); \
         fprintf(stdout, format, ##__VA_ARGS__); \
+    }
+
+#define DEBUG_SUCCESS(format, ...) \
+    if (DEBUG) { \
+        fprintf(stdout, GREEN("SUCCESS | %s | Line %d | %s | "), __FILE__, __LINE__, __FUNCTION__); \
+        fprintf(stdout, GREEN(format), ##__VA_ARGS__); \
     }
 
 #define DEBUG_WARN(format, ...) \
     if (DEBUG) { \
-        fprintf(stdout, YELLOW("%s | Line %d | %s | "), __FILE__, __LINE__, __FUNCTION__); \
+        fprintf(stdout, YELLOW("WARN | %s | Line %d | %s | "), __FILE__, __LINE__, __FUNCTION__); \
         fprintf(stdout, YELLOW(format), ##__VA_ARGS__); \
     }
 
 #define DEBUG_ERROR(format, ...) \
     if(DEBUG) { \
-        fprintf(stderr, RED("%s | Line %d | %s | "), __FILE__, __LINE__, __FUNCTION__); \
+        fprintf(stderr, RED("ERROR | %s | Line %d | %s | "), __FILE__, __LINE__, __FUNCTION__); \
         fprintf(stderr, RED(format), ##__VA_ARGS__); \
     }
 
