@@ -7,7 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "debug.h"
+#include "Debug.h"
 
 class Texture
 {

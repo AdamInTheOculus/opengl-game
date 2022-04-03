@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "debug.h"
+#include "Debug.h"
 
 void frameBufferSizeChangeCallback(GLFWwindow* window, int width, int height);
 

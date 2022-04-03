@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "debug.h"
+#include "Debug.h"
 
 Input::Input(GLFWwindow* window) {
     this->window = window;

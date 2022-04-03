@@ -5,9 +5,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "debug.h"
-#include "shader.h"
-#include "texture.h"
+#include "Debug.h"
+#include "Shader.h"
+#include "Texture.h"
 #include "Window.h"
 #include "Input.h"
 

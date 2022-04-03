@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "debug.h"
+#include "Debug.h"
 
 class Shader
 {
