@@ -30,9 +30,7 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
     }
 }
 
-Window::~Window() {
-
-}
+Window::~Window() {}
 
 bool Window::shouldClose() {
     return glfwWindowShouldClose(this->window);

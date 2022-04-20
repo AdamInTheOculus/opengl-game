@@ -44,7 +44,6 @@ int main() {
     // ====================
     // == Setup textures ==
     // ====================
-    stbi_set_flip_vertically_on_load(true);
     Texture texture(0, "assets/container.jpg", GL_RGB);
     Texture texture2(1, "assets/awesomeface.png", GL_RGBA);
 
