@@ -14,14 +14,12 @@ public:
     void clearScreen();
     void closeWindow();
     bool shouldClose();
-    GLFWwindow* getGLFWwindow();
+
+    static GLFWwindow* getWindow();
+    static GLFWwindow* window;
 
 private:
-    /**
-     * GLFW provides a simple API for creating windows, contexts and surfaces, receiving input and events.
-     * Other alternatives are SDL, GLUT, SFML, etc.
-    **/ 
-    GLFWwindow* window;
+
 };
 
 #endif

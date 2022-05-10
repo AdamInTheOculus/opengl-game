@@ -4,15 +4,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(unsigned int instanceCount, const char* filename, GLenum imageFormat)
-{
-    stbi_set_flip_vertically_on_load(true);
+unsigned int Texture::count = 0;
 
+Texture::Texture(const char* filename, GLenum imageFormat)
+{
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
+
     this->ID = texture;
-    this->instanceCount = instanceCount;
+    this->instanceID = count++;
 
     // Set texture wrapping options.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -58,6 +59,6 @@ Texture::~Texture()
 
 void Texture::use()
 {
-    glActiveTexture(GL_TEXTURE0 + this->instanceCount);
+    glActiveTexture(GL_TEXTURE0 + this->instanceID);
     glBindTexture(GL_TEXTURE_2D, this->ID);
 }

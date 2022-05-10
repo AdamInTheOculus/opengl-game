@@ -13,24 +13,20 @@ Shader::Shader(const char* vertexFilePath, const char* fragmentFilePath)
     vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
 
+    // Load shader code
     try
     {
-        // Open files
         vShaderFile.open(vertexFilePath);
         fShaderFile.open(fragmentFilePath);
 
-        // Read file buffer contents into streams
         std::stringstream vShaderStream, fShaderStream;
         vShaderStream << vShaderFile.rdbuf();
         fShaderStream << fShaderFile.rdbuf();
-
-        // Close file buffers
-        vShaderFile.close();
-        fShaderFile.close();
-
-        // Convert streams into strings
         vertexCode = vShaderStream.str();
         fragmentCode = fShaderStream.str();
+
+        vShaderFile.close();
+        fShaderFile.close();
     } catch (std::ifstream::failure &e) {
         DEBUG_ERROR("Failed to load shader. File not successfully read.\n");
         return;

@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Debug.h"
 
+GLFWwindow* Window::window = nullptr;
 void frameBufferSizeChangeCallback(GLFWwindow* window, int width, int height);
 
 Window::Window(const unsigned int width, const unsigned int height, const char* title) {
@@ -14,15 +15,15 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
         DEBUG_LOG("OSX GLFW settings enabled.\n");
     #endif
 
-    this->window = glfwCreateWindow(width, height, title, NULL, NULL);
+    Window::window = glfwCreateWindow(width, height, title, NULL, NULL);
     if(!this->window) {
         DEBUG_ERROR("Failed to create GLFW window.\n");
         glfwTerminate();
         return;
     }
 
-    glfwMakeContextCurrent(this->window);
-    glfwSetFramebufferSizeCallback(this->window, frameBufferSizeChangeCallback);
+    glfwMakeContextCurrent(Window::window);
+    glfwSetFramebufferSizeCallback(Window::window, frameBufferSizeChangeCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         DEBUG_ERROR("Failed to initialize GLAD.\n");
@@ -33,11 +34,11 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
 Window::~Window() {}
 
 bool Window::shouldClose() {
-    return glfwWindowShouldClose(this->window);
+    return glfwWindowShouldClose(Window::window);
 }
 
 void Window::swapBuffers() {
-    glfwSwapBuffers(this->window);
+    glfwSwapBuffers(Window::window);
 }
 
 void Window::clearScreen() {
@@ -45,12 +46,12 @@ void Window::clearScreen() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-GLFWwindow* Window::getGLFWwindow() {
-    return this->window;
+GLFWwindow* Window::getWindow() {
+    return Window::window;
 }
 
 void Window::closeWindow() {
-    glfwSetWindowShouldClose(this->window, true);
+    glfwSetWindowShouldClose(Window::window, true);
 }
 
 

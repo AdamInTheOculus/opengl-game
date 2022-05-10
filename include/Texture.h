@@ -9,9 +9,11 @@ class Texture
 public:
 
     unsigned int ID;
-    unsigned int instanceCount;
+    unsigned int instanceID;
 
-    Texture(unsigned int instanceCount, const char* filename, GLenum imageFormat);
+    static unsigned int count;
+
+    Texture(const char* filename, GLenum imageFormat);
     ~Texture();
 
     void use();

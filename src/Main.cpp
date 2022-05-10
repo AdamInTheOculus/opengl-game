@@ -4,6 +4,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "stb_image.h"
 
 #include "Debug.h"
 #include "Shader.h"
@@ -34,26 +35,21 @@ float mixVariable = 0.2f;
 
 int main() {
     glfwSetErrorCallback(error_callback);
+    stbi_set_flip_vertically_on_load(true);
 
     Window window(WINDOW_WIDTH, WINDOW_HEIGHT, "2D Platformer");
-    Input input(window.getGLFWwindow());
+    Input input(Window::window);
+
+    Texture texture("assets/container.jpg", GL_RGB);
+    Texture texture2("assets/awesomeface.png", GL_RGBA);
+
+    Shader shader("shaders/vertex.vs", "shaders/fragment.fs");
+    shader.use();
+    shader.setInt("customTexture", texture.instanceID);
+    shader.setInt("customTexture2", texture2.instanceID);
 
     unsigned int VAO, VBO, EBO;
     prepare_triangle(&VAO, &VBO, &EBO);
-
-    // ====================
-    // == Setup textures ==
-    // ====================
-    Texture texture(0, "assets/container.jpg", GL_RGB);
-    Texture texture2(1, "assets/awesomeface.png", GL_RGBA);
-
-    // ==========================
-    // == Setup shader program ==
-    // ==========================
-    Shader shader("shaders/vertex.vs", "shaders/fragment.fs");
-    shader.use();
-    shader.setInt("customTexture", texture.instanceCount);
-    shader.setInt("customTexture2", texture2.instanceCount);
 
     while(!window.shouldClose()) {
         if (input.isKeyPressed(GLFW_KEY_ESCAPE)|| input.isKeyPressed(GLFW_KEY_Q)) {
