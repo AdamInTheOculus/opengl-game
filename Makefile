@@ -1,17 +1,18 @@
+EXECUTABLE = game
+FLAGS = -Wall
+SRC = src/*
+INCLUDES = -Iinclude/ -Iinclude/stb_image
+LIBS = -lglfw -framework OpenGL
+
 all:
 	make build run
 
 build:
 	rm bin/*; clear
-	g++ -Wall src/* -o bin/game -Iinclude/ -Iinclude/stb_image -lglfw -framework OpenGL
-
-memorycheck:
-	rm bin/*; clear
-	g++ -DDEBUG=1 -Wall -g src/* -o bin/game -Iinclude/ -Iinclude/stb_image -lglfw -framework OpenGL
-	leaks -atExit -- ./bin/game
+	g++ ${FLAGS} $(SRC) -o bin/$(EXECUTABLE) $(INCLUDES) $(LIBS)
 
 clean:
-	rm bin/game
+	rm bin/$(EXECUTABLE)
 
 run:
-	./bin/game
+	./bin/$(EXECUTABLE)
