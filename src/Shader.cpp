@@ -28,7 +28,7 @@ Shader::Shader(const char* vertexFilePath, const char* fragmentFilePath)
         vShaderFile.close();
         fShaderFile.close();
     } catch (std::ifstream::failure &e) {
-        DEBUG_ERROR("Failed to load shader. File not successfully read.\n");
+        DEBUG_ERROR("Failed to load shader. File not successfully read.");
         return;
     }
 
@@ -91,13 +91,13 @@ void Shader::checkCompileErrors(unsigned int shader, const char* type)
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            DEBUG_ERROR("Shader program failed to link.\n%s\n", infoLog);
+            DEBUG_ERROR("Shader program failed to link.\n%s", infoLog);
         }
     } else {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            DEBUG_ERROR("%s shader failed to compile.\n%s\n", type, infoLog);
+            DEBUG_ERROR("%s shader failed to compile.\n%s", type, infoLog);
         }
     }
 }

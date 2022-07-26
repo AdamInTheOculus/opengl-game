@@ -6,6 +6,10 @@
 #include <GLFW/glfw3.h>
 #include "stb_image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Debug.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -48,11 +52,17 @@ int main() {
     shader.setInt("customTexture", texture.instanceID);
     shader.setInt("customTexture2", texture2.instanceID);
 
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
+    vec = trans * vec;
+    DEBUG_LOG("Vector (%.0f,%.0f,%.0f)", vec.x, vec.y, vec.z);
+
     unsigned int VAO, VBO, EBO;
     prepare_triangle(&VAO, &VBO, &EBO);
 
     while(!window.shouldClose()) {
-        if (input.isKeyPressed(GLFW_KEY_ESCAPE)|| input.isKeyPressed(GLFW_KEY_Q)) {
+        if (input.isKeyPressed(GLFW_KEY_ESCAPE)|| input.isKeyPressed(GLFW_KEY_Q) || input.isKeyPressed(GLFW_KEY_SPACE)) {
             window.closeWindow();
         }
 
@@ -93,7 +103,7 @@ int main() {
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glfwTerminate();
-    DEBUG_SUCCESS("Closing application. Clean up complete.\n");
+    DEBUG_SUCCESS("Closing application. Clean up complete.");
     return 0;
 }
 
@@ -145,5 +155,5 @@ void prepare_triangle(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO)
 }
 
 void error_callback(int error, const char* description) {
-    DEBUG_ERROR("%s\n", description);
+    DEBUG_ERROR("%s", description);
 }

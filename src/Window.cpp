@@ -12,12 +12,12 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
 
     #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        DEBUG_LOG("OSX GLFW settings enabled.\n");
+        DEBUG_LOG("OSX GLFW settings enabled.");
     #endif
 
     Window::window = glfwCreateWindow(width, height, title, NULL, NULL);
     if(!this->window) {
-        DEBUG_ERROR("Failed to create GLFW window.\n");
+        DEBUG_ERROR("Failed to create GLFW window.");
         glfwTerminate();
         return;
     }
@@ -26,7 +26,7 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
     glfwSetFramebufferSizeCallback(Window::window, frameBufferSizeChangeCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        DEBUG_ERROR("Failed to initialize GLAD.\n");
+        DEBUG_ERROR("Failed to initialize GLAD.");
         return;
     }
 }
@@ -56,6 +56,6 @@ void Window::closeWindow() {
 
 
 void frameBufferSizeChangeCallback(GLFWwindow* window, int width, int height) {
-    DEBUG_LOG("Resizing frame buffer to %dW x %dH.\n", width, height);
+    DEBUG_LOG("Resizing frame buffer to %dW x %dH.", width, height);
     glViewport(0, 0, width, height);
 }

@@ -1,7 +1,10 @@
 EXECUTABLE = game
 FLAGS = -Wall
-SRC = src/*
-INCLUDES = -Iinclude/ -Iinclude/stb_image
+
+# TODO(Adam): Figure out why we need to specify .cpp files explicitly.
+SRC = src/*.cpp src/glad/*.cpp
+
+INCLUDES = -Iinclude/ -Iinclude/stb_image -Iinclude/glm
 LIBS = -lglfw -framework OpenGL
 
 all:

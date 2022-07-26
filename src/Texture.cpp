@@ -15,29 +15,22 @@ Texture::Texture(const char* filename, GLenum imageFormat)
     this->ID = texture;
     this->instanceID = count++;
 
-    // Set texture wrapping options.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Texture wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Set texture filtering options.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Texture filtering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    // Set texture mipmap options.
-    glGenerateMipmap(GL_TEXTURE_2D);
-
     int width, height, colorChannelCount;
-    unsigned char* data = stbi_load(filename, &width, &height, &colorChannelCount, 0);
-    if(!data) {
-        DEBUG_ERROR("Failed to load image from file [%s]\n", filename);
+    unsigned char* imageData = stbi_load(filename, &width, &height, &colorChannelCount, 0);
+    if(!imageData) {
+        DEBUG_ERROR("Failed to load image from file [%s]", filename);
         return;
     }
 
-    // Generate a texture with loaded image data
     glTexImage2D(
-        GL_TEXTURE_2D,    // Texture target. Operations will generate a texture of 
-                            // currently bound texture object at the same target.
-
+        // Specify texture target. 
+        // Operations will generate a texture of the currently bound texture object at the same target.
+        GL_TEXTURE_2D,
         0,                // Specifies mipmap level. Base level is zero
         imageFormat,      // Storage format. (RGB, RGBA values)
         width,            // Set width of resulting texture
@@ -45,11 +38,11 @@ Texture::Texture(const char* filename, GLenum imageFormat)
         0,                // Always zero (legacy stuff?)
         imageFormat,      // Format of source image (RGB, RGBA values)
         GL_UNSIGNED_BYTE, // Data type of source image (char)
-        data              // Image data
+        imageData
     );
 
-    stbi_image_free(data);
-    DEBUG_LOG("Created texture from file [%s]\n", filename);
+    stbi_image_free(imageData);
+    DEBUG_LOG("Success loading [%s]!", filename);
 }
 
 Texture::~Texture()
@@ -61,4 +54,13 @@ void Texture::use()
 {
     glActiveTexture(GL_TEXTURE0 + this->instanceID);
     glBindTexture(GL_TEXTURE_2D, this->ID);
+}
+
+/**
+ * @brief 
+ * 
+ */
+void Texture::enableMipmaps()
+{
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
