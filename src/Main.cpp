@@ -115,8 +115,10 @@ int main() {
     // prepare_triangle(&VAO, &VBO, &EBO);
     prepare_cube(&VAO, &VBO, &EBO);
 
+    glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -3.0f);
+
     while(!window.shouldClose()) {
-        if (input.isKeyPressed(GLFW_KEY_ESCAPE)|| input.isKeyPressed(GLFW_KEY_Q) || input.isKeyPressed(GLFW_KEY_SPACE)) {
+        if (input.isKeyPressed(GLFW_KEY_ESCAPE) || input.isKeyPressed(GLFW_KEY_SPACE)) {
             window.closeWindow();
         }
 
@@ -147,6 +149,30 @@ int main() {
             fov -= 0.5f;
         }
 
+        if(input.isKeyPressed(GLFW_KEY_W)) {
+            cameraPosition.z += 0.1f;
+        }
+
+        if(input.isKeyPressed(GLFW_KEY_A)) {
+            cameraPosition.x += 0.1f;
+        }
+
+        if(input.isKeyPressed(GLFW_KEY_S)) {
+            cameraPosition.z -= 0.1f;
+        }
+
+        if(input.isKeyPressed(GLFW_KEY_D)) {
+            cameraPosition.x -= 0.1f;
+        }
+
+        if(input.isKeyPressed(GLFW_KEY_Q)) {
+            cameraPosition.y += 0.1f;
+        }
+
+        if(input.isKeyPressed(GLFW_KEY_E)) {
+            cameraPosition.y -= 0.1f;
+        }
+
         window.clearScreen();
 
         texture.use();
@@ -159,7 +185,7 @@ int main() {
 
         // note that we're translating the scene in the reverse direction of where we want to move
         glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::translate(view, cameraPosition);
 
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
