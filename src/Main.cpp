@@ -100,7 +100,7 @@ int main() {
     glfwSetErrorCallback(error_callback);
     stbi_set_flip_vertically_on_load(true);
 
-    Window window(WINDOW_WIDTH, WINDOW_HEIGHT, "2D Platformer");
+    Window window(WINDOW_WIDTH, WINDOW_HEIGHT, "3D Game");
     Input input(Window::window);
 
     Texture texture("assets/container.jpg", GL_RGB);
@@ -186,6 +186,7 @@ int main() {
         // note that we're translating the scene in the reverse direction of where we want to move
         glm::mat4 view = glm::mat4(1.0f);
         view = glm::translate(view, cameraPosition);
+        view = glm::rotate(view, (float)glfwGetTime() * glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
@@ -198,8 +199,12 @@ int main() {
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i + 5;
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            float angle = 20.0f * i + 50;
+
+            if(i == 0 || i % 3 == 0) {
+                model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            }
+
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
