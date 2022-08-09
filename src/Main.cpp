@@ -19,6 +19,8 @@
 void prepare_triangle(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
 void prepare_cube(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
 void error_callback(int error, const char* description);
+void mouse_cursor_callback(GLFWwindow* window, double xposIn, double yposIn);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
@@ -88,6 +90,20 @@ const int indices[] = {
 float mixVariable = 0.2f;
 float fov = 45.0f;
 
+float yaw = -90.0f;
+float pitch = 90.0f;
+
+float lastMouseX = WINDOW_WIDTH / 2;
+float lastMouseY = WINDOW_HEIGHT / 2;
+bool initialMouseCallback = true;
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 int main() {
     glfwSetErrorCallback(error_callback);
     stbi_set_flip_vertically_on_load(true);
@@ -106,15 +122,14 @@ int main() {
     unsigned int VAO, VBO, EBO;
     prepare_cube(&VAO, &VBO, &EBO);
 
-    glm::vec3 cameraPosition = glm::vec3(0.0, 0.0, 3.0);
-    glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
-    glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
-
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
+    glfwSetInputMode(window.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window.window, mouse_cursor_callback);
+    glfwSetScrollCallback(window.window, scroll_callback);
 
     while(!window.shouldClose()) {
-        float currentFrame = glfwGetTime();
+
+        // per-frame time logic
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -128,12 +143,6 @@ int main() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         } else if (input.isKeyPressed(GLFW_KEY_3)) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_LEFT)) {
-            fov += 0.5f;
-        } else if(input.isKeyPressed(GLFW_KEY_RIGHT)) {
-            fov -= 0.5f;
         }
 
         float cameraSpeed = 2.5f * deltaTime;
@@ -165,12 +174,11 @@ int main() {
   		  cameraPosition + cameraFront,  // Target
   		  cameraUp                       // Up vector
         );
+        shader.setMat4("view", view);
 
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
         projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
-
-        shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
         glBindVertexArray(VAO);
@@ -198,6 +206,51 @@ int main() {
     DEBUG_SUCCESS("Closing application. Clean up complete.");
     return 0;
 }
+
+void mouse_cursor_callback(GLFWwindow* window, double xposIn, double yposIn) {
+
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if(initialMouseCallback) {
+        lastMouseX = xpos;
+        lastMouseY = ypos;
+        initialMouseCallback = false;
+        DEBUG_LOG("(%.2f, %.2f) Initial Mouse Coordinates", lastMouseX, lastMouseY);
+    }
+
+    float xoffset = xpos - lastMouseX;
+    float yoffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top
+    lastMouseX = xpos;
+    lastMouseY = ypos;
+
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f)
+        pitch = 89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    fov -= (float)yoffset;
+    if(fov < 1.0f)
+        fov = 1.0f;
+    if(fov > 45.0f)
+        fov = 45.0f;
+}
+
 
 void prepare_triangle(unsigned int* VAO, unsigned int* VBO, unsigned int* EBO)
 {

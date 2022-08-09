@@ -56,7 +56,6 @@ void Window::closeWindow() {
     glfwSetWindowShouldClose(Window::window, true);
 }
 
-
 void frameBufferSizeChangeCallback(GLFWwindow* window, int width, int height) {
     DEBUG_LOG("Resizing frame buffer to %dW x %dH.", width, height);
     glViewport(0, 0, width, height);
