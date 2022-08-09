@@ -23,14 +23,6 @@ void error_callback(int error, const char* description);
 const int WINDOW_HEIGHT = 720;
 const int WINDOW_WIDTH = 1280;
 
-// const float vertices[] = {
-//     // positions         // colours          // texture coords
-//      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-//      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-//     -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-//     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-// };
-
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -112,15 +104,20 @@ int main() {
     shader.setInt("customTexture2", texture2.instanceID);
 
     unsigned int VAO, VBO, EBO;
-    // prepare_triangle(&VAO, &VBO, &EBO);
     prepare_cube(&VAO, &VBO, &EBO);
 
     glm::vec3 cameraPosition = glm::vec3(0.0, 0.0, 3.0);
     glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
     glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
-    const float cameraSpeed = 0.05f;
+
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
 
     while(!window.shouldClose()) {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         if (input.isKeyPressed(GLFW_KEY_ESCAPE) || input.isKeyPressed(GLFW_KEY_Q)) {
             window.closeWindow();
         }
@@ -135,10 +132,11 @@ int main() {
 
         if(input.isKeyPressed(GLFW_KEY_LEFT)) {
             fov += 0.5f;
-            DEBUG_LOG("FOV [%.2f]", fov);
         } else if(input.isKeyPressed(GLFW_KEY_RIGHT)) {
             fov -= 0.5f;
         }
+
+        float cameraSpeed = 2.5f * deltaTime;
 
         if(input.isKeyPressed(GLFW_KEY_W))
             cameraPosition += cameraSpeed * cameraFront;
@@ -160,18 +158,6 @@ int main() {
         shader.use();
         shader.setFloat("mixVariable", mixVariable);
 
-        // note that we're translating the scene in the reverse direction of where we want to move
-
-        // CAMERA MOVEMENT
-        // glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-        // glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-        // glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
-
-        // Use cross product to get perpendicular vector (right vector of camera) 
-        // glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        // glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-        // glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
-
         // Use LookAt matrix to set where camera is pointing.
         glm::mat4 view;
         view = glm::lookAt(
@@ -183,7 +169,6 @@ int main() {
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
         projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
-        // Debug::printMatrix(projection, "Projection Matrix");
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
@@ -198,22 +183,12 @@ int main() {
                 model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             }
 
-            // char matrixString[50];
-            // sprintf(matrixString, "Model Matrix [Model %d - Vertex 0]", i);
-            // Debug::printMatrix(model, matrixString);
-
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
-
-            // Debug::printVector(model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         }
 
         window.swapBuffers();
         input.pollEvents();
-
-        // DEBUG_LOG("Final Position");
-        // DEBUG_LOG("[%0.2f,   %0.2f,   %0.2f,   %0.2f]", finalPosition.x, finalPosition.y, finalPosition.z, finalPosition.w);
-        // DEBUG_LOG("------------------");
     }
 
     glDeleteVertexArrays(1, &VAO);
