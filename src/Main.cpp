@@ -76,16 +76,16 @@ float vertices[] = {
 };
 
 glm::vec3 cubePositions[] = {
-    glm::vec3( 0.0f,  0.0f,  -5.0f),
+    glm::vec3( 0.0f,  0.0f,  0.0f),
     glm::vec3( 2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-1.5f, -2.2f, -32.5f),
     glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3( 2.4f, -0.4f, -9.5f),
     glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f,  2.0f, -2.5f),
-    glm::vec3( 1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
+    glm::vec3( 1.3f, -2.0f, -6.5f),
+    glm::vec3( 1.5f,  2.0f, -14.5f),
+    glm::vec3( 1.5f,  0.2f, -11.5f),
+    glm::vec3(-1.3f,  1.0f, -8.5f)
 };
 
 const int indices[] = {
@@ -115,10 +115,13 @@ int main() {
     // prepare_triangle(&VAO, &VBO, &EBO);
     prepare_cube(&VAO, &VBO, &EBO);
 
-    glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, -3.0f);
+    glm::vec3 cameraPosition = glm::vec3(0.0, 0.0, 3.0);
+    glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0);
+    glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
+    const float cameraSpeed = 0.05f;
 
     while(!window.shouldClose()) {
-        if (input.isKeyPressed(GLFW_KEY_ESCAPE) || input.isKeyPressed(GLFW_KEY_SPACE)) {
+        if (input.isKeyPressed(GLFW_KEY_ESCAPE) || input.isKeyPressed(GLFW_KEY_Q)) {
             window.closeWindow();
         }
 
@@ -130,18 +133,6 @@ int main() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
         }
 
-        // if (input.isKeyPressed(GLFW_KEY_UP)) {
-        //     mixVariable += 0.01f;
-        //     if (mixVariable > 1.0f) {
-        //         mixVariable = 1.0f;
-        //     }
-        // } else if (input.isKeyPressed(GLFW_KEY_DOWN)) {
-        //     mixVariable -= 0.01f;
-        //     if (mixVariable < 0.0f) {
-        //         mixVariable = 0.0f;
-        //     }
-        // }
-
         if(input.isKeyPressed(GLFW_KEY_LEFT)) {
             fov += 0.5f;
             DEBUG_LOG("FOV [%.2f]", fov);
@@ -149,29 +140,18 @@ int main() {
             fov -= 0.5f;
         }
 
-        if(input.isKeyPressed(GLFW_KEY_W)) {
-            cameraPosition.z += 0.1f;
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_A)) {
-            cameraPosition.x += 0.1f;
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_S)) {
-            cameraPosition.z -= 0.1f;
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_D)) {
-            cameraPosition.x -= 0.1f;
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_Q)) {
-            cameraPosition.y += 0.1f;
-        }
-
-        if(input.isKeyPressed(GLFW_KEY_E)) {
-            cameraPosition.y -= 0.1f;
-        }
+        if(input.isKeyPressed(GLFW_KEY_W))
+            cameraPosition += cameraSpeed * cameraFront;
+        if(input.isKeyPressed(GLFW_KEY_S))
+            cameraPosition -= cameraSpeed * cameraFront;
+        if(input.isKeyPressed(GLFW_KEY_D))
+            cameraPosition += cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+        if(input.isKeyPressed(GLFW_KEY_A))
+            cameraPosition -= cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+        if(input.isKeyPressed(GLFW_KEY_SPACE))
+            cameraPosition += cameraSpeed * cameraUp;
+        if(input.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+            cameraPosition -= cameraSpeed * cameraUp;
 
         window.clearScreen();
 
@@ -180,23 +160,36 @@ int main() {
         shader.use();
         shader.setFloat("mixVariable", mixVariable);
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-
         // note that we're translating the scene in the reverse direction of where we want to move
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, cameraPosition);
-        view = glm::rotate(view, (float)glfwGetTime() * glm::radians(25.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // CAMERA MOVEMENT
+        // glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+        // glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        // glm::vec3 cameraDirection = glm::normalize(cameraPosition - cameraTarget);
+
+        // Use cross product to get perpendicular vector (right vector of camera) 
+        // glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        // glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+        // glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
+
+        // Use LookAt matrix to set where camera is pointing.
+        glm::mat4 view;
+        view = glm::lookAt(
+          cameraPosition,                // Position
+  		  cameraPosition + cameraFront,  // Target
+  		  cameraUp                       // Up vector
+        );
 
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
         projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
+        // Debug::printMatrix(projection, "Projection Matrix");
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
         glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < 10; i++) {
+        for (unsigned int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i + 50;
@@ -205,12 +198,22 @@ int main() {
                 model = glm::rotate(model, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             }
 
+            // char matrixString[50];
+            // sprintf(matrixString, "Model Matrix [Model %d - Vertex 0]", i);
+            // Debug::printMatrix(model, matrixString);
+
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
+
+            // Debug::printVector(model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         }
 
         window.swapBuffers();
         input.pollEvents();
+
+        // DEBUG_LOG("Final Position");
+        // DEBUG_LOG("[%0.2f,   %0.2f,   %0.2f,   %0.2f]", finalPosition.x, finalPosition.y, finalPosition.z, finalPosition.w);
+        // DEBUG_LOG("------------------");
     }
 
     glDeleteVertexArrays(1, &VAO);

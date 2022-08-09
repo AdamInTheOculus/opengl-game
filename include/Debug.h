@@ -2,6 +2,8 @@
 #define DEBUG_H
 
 #include <stdio.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #ifndef DEBUG
     #define DEBUG 1
@@ -48,5 +50,15 @@
         } \
         fprintf(stderr, RED(format), ##__VA_ARGS__); \
     }
+
+class Debug {
+public:
+    static void printMatrix(const glm::mat4 &matrix);
+    static void printMatrix(const glm::mat4 &matrix, const char* title);
+    static void printVector(const glm::vec3 &vector);
+    static void printVector(const glm::vec4 &vector);
+    static void printVector(const glm::vec3 &vector, const char* title);
+    static void printVector(const glm::vec4 &vector, const char* title);
+};
 
 #endif
