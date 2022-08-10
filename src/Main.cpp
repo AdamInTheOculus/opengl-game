@@ -91,7 +91,7 @@ float mixVariable = 0.2f;
 float fov = 45.0f;
 
 float yaw = -90.0f;
-float pitch = 90.0f;
+float pitch = 0.0f;
 
 float lastMouseX = WINDOW_WIDTH / 2;
 float lastMouseY = WINDOW_HEIGHT / 2;
@@ -207,16 +207,11 @@ int main() {
     return 0;
 }
 
-void mouse_cursor_callback(GLFWwindow* window, double xposIn, double yposIn) {
-
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
+void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos) {
     if(initialMouseCallback) {
         lastMouseX = xpos;
         lastMouseY = ypos;
         initialMouseCallback = false;
-        DEBUG_LOG("(%.2f, %.2f) Initial Mouse Coordinates", lastMouseX, lastMouseY);
     }
 
     float xoffset = xpos - lastMouseX;
@@ -236,11 +231,11 @@ void mouse_cursor_callback(GLFWwindow* window, double xposIn, double yposIn) {
     if(pitch < -89.0f)
         pitch = -89.0f;
 
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
