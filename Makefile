@@ -1,5 +1,5 @@
 EXECUTABLE = game
-FLAGS = -Wall
+FLAGS = -Wall -std=c++11
 
 # TODO(Adam): Figure out why we need to specify .cpp files explicitly.
 SRC = src/*.cpp src/glad/*.cpp

@@ -15,6 +15,7 @@
 #include "Texture.h"
 #include "Window.h"
 #include "Input.h"
+#include "Camera.h"
 
 void prepare_triangle(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
 void prepare_cube(unsigned int* vao, unsigned int* vbo, unsigned int* ebo);
@@ -88,21 +89,15 @@ const int indices[] = {
 };
 
 float mixVariable = 0.2f;
-float fov = 45.0f;
 
-float yaw = -90.0f;
-float pitch = 0.0f;
-
+bool initialMouseCallback = true;
 float lastMouseX = WINDOW_WIDTH / 2;
 float lastMouseY = WINDOW_HEIGHT / 2;
-bool initialMouseCallback = true;
+glm::vec3 startPosition = glm::vec3(0.0f, 0.0f, 10.0f);
+Camera camera(startPosition);
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 int main() {
     glfwSetErrorCallback(error_callback);
@@ -145,20 +140,18 @@ int main() {
             glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
         }
 
-        float cameraSpeed = 2.5f * deltaTime;
-
         if(input.isKeyPressed(GLFW_KEY_W))
-            cameraPosition += cameraSpeed * cameraFront;
+            camera.handleKeyboardInput(CameraMovement::FORWARD, deltaTime);
         if(input.isKeyPressed(GLFW_KEY_S))
-            cameraPosition -= cameraSpeed * cameraFront;
+            camera.handleKeyboardInput(CameraMovement::BACKWARD, deltaTime);
         if(input.isKeyPressed(GLFW_KEY_D))
-            cameraPosition += cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
+            camera.handleKeyboardInput(CameraMovement::RIGHT, deltaTime);
         if(input.isKeyPressed(GLFW_KEY_A))
-            cameraPosition -= cameraSpeed * glm::normalize(glm::cross(cameraFront, cameraUp));
-        if(input.isKeyPressed(GLFW_KEY_SPACE))
-            cameraPosition += cameraSpeed * cameraUp;
-        if(input.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-            cameraPosition -= cameraSpeed * cameraUp;
+            camera.handleKeyboardInput(CameraMovement::LEFT, deltaTime);
+        // if(input.isKeyPressed(GLFW_KEY_SPACE))
+        //     camera.handleKeyboardInput(CameraMovement::FORWARD, deltaTime);
+        // if(input.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+        //     camera.handleKeyboardInput(CameraMovement::FORWARD, deltaTime);
 
         window.clearScreen();
 
@@ -167,18 +160,12 @@ int main() {
         shader.use();
         shader.setFloat("mixVariable", mixVariable);
 
-        // Use LookAt matrix to set where camera is pointing.
-        glm::mat4 view;
-        view = glm::lookAt(
-          cameraPosition,                // Position
-  		  cameraPosition + cameraFront,  // Target
-  		  cameraUp                       // Up vector
-        );
+        glm::mat4 view = camera.getViewMatrix();
         shader.setMat4("view", view);
 
         glm::mat4 projection;
         float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
-        projection = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(camera.zoom), aspectRatio, 0.1f, 100.0f);
         shader.setMat4("projection", projection);
 
         glBindVertexArray(VAO);
@@ -216,34 +203,15 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos) {
 
     float xoffset = xpos - lastMouseX;
     float yoffset = lastMouseY - ypos; // reversed since y-coordinates range from bottom to top
+
     lastMouseX = xpos;
     lastMouseY = ypos;
 
-    const float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if(pitch > 89.0f)
-        pitch = 89.0f;
-    if(pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    camera.handleMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    fov -= (float)yoffset;
-    if(fov < 1.0f)
-        fov = 1.0f;
-    if(fov > 45.0f)
-        fov = 45.0f;
+    camera.handleMouseScroll(static_cast<float>(yoffset));
 }
 
 
