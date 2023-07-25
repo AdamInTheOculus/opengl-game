@@ -37,6 +37,8 @@ void Camera::handleKeyboardInput(CameraMovement direction, float deltaTime)
         this->position -= this->right * velocity;
     else if (direction == CameraMovement::RIGHT)
         this->position += this->right * velocity;
+
+    // this->position.y = 0.0f; // This one-liner keeps the player at ground level.
 }
 
 void Camera::handleMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
